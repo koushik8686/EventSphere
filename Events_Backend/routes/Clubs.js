@@ -20,7 +20,8 @@ router.get('/clubs', async (req, res) => {
     const allClubs = await Clubs.find();
     res.status(200).json(allClubs);
   } catch (error) {
-    res.status(500).json({ error: 'Internal Server Error' });
+    console.error('Error fetching clubs:', error);
+    res.status(500).json({ error: 'Internal Server Error'  , err: error});
   }
 });
 
