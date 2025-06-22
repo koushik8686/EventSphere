@@ -3,7 +3,7 @@ import { Users, Calendar, Clock, MapPin, Phone, DollarSign, Search, Plus, Star }
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Base_Url } from './apiserveices/api';
-import useAuth from './hooks/useAuth';
+import Cookies from 'js-cookie'
 
 function EventOwner() {
   const { id } = useParams();
@@ -13,10 +13,13 @@ function EventOwner() {
   const [error, setError] = useState(null);
   const [leads, setleads] = useState(null)
   const [activeTab, setActiveTab] = useState('participants');
-  useAuth({userType: "admin",})
   useEffect(() => {
     const fetchEventData = async () => {
       try {
+        const token = Cookies.get('admin');
+        if (!token) {
+          navigate('/club/login');
+        }
         const response = await axios.get(`${Base_Url}/clubs/event/${id}`);
         setEvent(response.data.event);
         setleads(response.data.leads) 

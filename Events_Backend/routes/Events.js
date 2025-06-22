@@ -20,6 +20,20 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+router.delete("/events/:id", async (req, res) => {
+  try {
+    const eventId = req.params.id;
+    const deletedEvent = await Events.findByIdAndDelete(eventId);
+    if (!deletedEvent) {
+      return res.status(404).json({ error: "Event not found" });
+    }
+    res.status(200).json({ message: "Event deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting event:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 router.get("/events", async (req, res) => {
   try {
     // Ensure Events model is correctly imported

@@ -17,8 +17,8 @@ const SecondPg = () => {
   useEffect(() => {
     const fetchClubs = async () => {
       try {
-        // Replace with your actual backend base URL
         const baseUrl = Base_Url;
+        console.log(baseUrl);
         const response = await fetch(`${baseUrl}/clubs`);
         
         if (!response.ok) {

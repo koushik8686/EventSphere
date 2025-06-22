@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://localhost:5000";
+const API_BASE_URL = import.meta.env.VITE_BASE_URL;
 import axios from "axios";
 
 export const Base_Url = API_BASE_URL;
@@ -73,6 +73,16 @@ export const Apis = {
       return response.data
     } catch (error) {
       console.error('Error accepting event:', error)
+      throw error
+    }
+  },
+
+  async deleteEvent(eventId) {
+    try {
+      const response = await axios.delete(`${API_BASE_URL}/events/${eventId}`)
+      return response.data
+    } catch (error) {
+      console.error('Error deleting event:', error)
       throw error
     }
   },

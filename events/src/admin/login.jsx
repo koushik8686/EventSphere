@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Lock, Mail } from 'lucide-react';
 import { Apis } from '../apiserveices/api';
 import { useNavigate } from 'react-router-dom';
-
+import Cookies from 'js-cookie';
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -20,6 +20,7 @@ export default function LoginPage() {
       
       if (response.token) {
         // Redirect to admin dashboard on successful login
+        Cookies.set('admin', response.token);
         navigate('/admin/dashboard');
       } else {
         throw new Error('Login failed');

@@ -6,7 +6,8 @@ import { Search, Plus, Users, CalendarDays, Building2 } from 'lucide-react'
 import AddClubModal from '../forms/AddClub'
 import { Apis } from '../apiserveices/api'
 import Loader from '../Loader'
-
+import Cookies from 'js-cookie';
+import { useNavigate } from 'react-router-dom';
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('events')
   const [searchQuery, setSearchQuery] = useState('')
@@ -15,6 +16,7 @@ export default function AdminDashboard() {
   const [events, setEvents] = useState([])
   const [eventReqs, setEventReqs] = useState([])
   const [loading, setLoading] = useState(true)
+  const navigate = useNavigate()
   const fetchData = async () => {
     setLoading(true)
     try {
@@ -29,6 +31,10 @@ export default function AdminDashboard() {
     }
   }
   useEffect(() => {
+    const token = Cookies.get('admin');
+    if (!token) {
+      navigate('/admin/login');
+    }
     // Fetch events from the backend
     fetchData()
   }, [])
@@ -135,7 +141,7 @@ export default function AdminDashboard() {
                   {filteredEvents?.map(event => (
                     <EventCard
                       key={event._id}
-                      event={event}
+                      event={{...event, isAccepted: false}}
                       onEdit={handleEditEvent}
                       onDelete={handleDeleteEvent}
                     />
@@ -148,7 +154,7 @@ export default function AdminDashboard() {
                       {eventReqs.map(event => (
                         <EventCard
                           key={event._id}
-                          event={event}
+                          event={{...event, isAccepted: true}}
                           onEdit={handleEditEvent}
                           onDelete={handleDeleteEvent}
                           fetchData={fetchData}

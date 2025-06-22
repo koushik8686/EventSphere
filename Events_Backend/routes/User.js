@@ -43,12 +43,7 @@ router.put("/profile/:id", function (req, res) {
 
 router.post("/register-event", async (req, res) => {
   try {
-    const userid = req.body?.userid;
-    const eventId = req.body?.eventId;
-    const leadInfo = req.body?.leadInfo;
-    const isTeam = req.body?.isTeam || false;
-    const teamName = req.body?.teamName || null;
-    const members = req.body?.members || [];
+    const { userid, eventId, leadInfo, isTeam, teamName, members, isPaid, amount } = req.body;
 
     if (!userid || !eventId) {
       return res.status(400).json({ error: "Missing userid or event ID" });
@@ -58,62 +53,71 @@ router.post("/register-event", async (req, res) => {
       return res.status(400).json({ error: "Missing lead info" });
     }
 
+    // Check if user exists
     const user = await User.findById(userid);
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
-    if (user.email != leadInfo.email) {
-      return res.status(400).json({ error: "Email mismatch" });
-    }
+
+    // Check if user is already registered
     if (user.events.includes(eventId)) {
-      return res
-        .status(400)
-        .json({ error: "User already registered for the event" });
+      return res.status(400).json({ error: "User already registered for this event" });
     }
 
-    // Update the user's registered events
-    const updatedUser = await User.findByIdAndUpdate(
-      userid,
-      { $push: { events: eventId } }, // Add the event ID to the user's `events` array
-      { new: true } // Return the updated user document
-    );
+    // Prepare participant data
+    const participantData = {
+      lead: userid,
+      lead_name: leadInfo.name,
+      lead_email: leadInfo.email,
+      lead_phone: leadInfo.phone,
+      lead_profilePic: user.profilePic || null,
+    };
 
-    if (!updatedUser) {
-      return res.status(404).json({ error: "User not found" });
+    if (isTeam) {
+      participantData.registrationData = {
+        teamName,
+        members: members || []
+      };
     }
 
-    // Update the event's registered users
-    const updatedEvent = await Event.findByIdAndUpdate(
-      eventId,
-      {
-        $push: {
-          participants: {
-            lead: userid,
-            registrationData: isTeam
-              ? {
-                  teamName,
-                  members,
-                }
-              : null,
-          },
-        },
-      }, // Add the user ID to the event's `participants` array
-      { new: true } // Return the updated event document
-    );
+    // Update user and event in a transaction
+    const session = await mongoose.startSession();
+    session.startTransaction();
 
-    if (!updatedEvent) {
-      return res.status(404).json({ error: "Event not found" });
+    try {
+      // Update user's events
+      const updatedUser = await User.findByIdAndUpdate(
+        userid,
+        { $addToSet: { events: eventId } },
+        { new: true, session }
+      );
+
+      // Update event's participants
+      const updatedEvent = await Event.findByIdAndUpdate(
+        eventId,
+        { $addToSet: { participants: participantData } },
+        { new: true, session }
+      );
+
+      await session.commitTransaction();
+      session.endSession();
+
+      res.status(200).json({
+        message: "Registration successful",
+        user: updatedUser,
+        event: updatedEvent
+      });
+    } catch (error) {
+      await session.abortTransaction();
+      session.endSession();
+      throw error;
     }
-
-    res.status(200).json({
-      message: "User registered for the event successfully",
-      user: updatedUser,
-      event: updatedEvent,
-    });
   } catch (error) {
-    res
-      .status(500)
-      .json({ error: "Internal Server Error", details: error.message });
+    console.error("Registration error:", error);
+    res.status(500).json({ 
+      error: "Internal Server Error", 
+      details: error.message 
+    });
   }
 });
 

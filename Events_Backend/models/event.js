@@ -60,6 +60,10 @@ const eventSchema = new mongoose.Schema(
     participants: [
       {
         lead: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        lead_name : String,
+        lead_email : String,
+        lead_phone : String,
+        lead_profilePic : String,
         registrationData: {
           teamName: String,
           members: [{ name: String, email: String }],

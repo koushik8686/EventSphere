@@ -41,7 +41,7 @@ export default function AddEvent() {
     e.preventDefault();
 
     try {
-      const response = await axios.post('http://localhost:5000/create', eventDetails, {
+      const response = await axios.post( `${process.env.VITE_BASE_URL}/create`, eventDetails, {
         headers: {
           'Content-Type': 'application/json',
         },
